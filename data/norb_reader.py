@@ -59,14 +59,14 @@ def readHeader(file_handle, debug=False, from_gzip=None):
     type_key = readNums(file_handle, 'int32', 1)[0]
     elem_type, elem_size = key_to_type[type_key]
     if debug: 
-        print "header's type key, type, type size: ", \
-            type_key, elem_type, elem_size
+        print("header's type key, type, type size: ", \
+            type_key, elem_type, elem_size)
     if elem_type == 'packed matrix':
         raise NotImplementedError('packed matrix not supported')
 
     num_dims = readNums(file_handle, 'int32', 1)[0]
     if debug: 
-        print '# of dimensions, according to header: ', num_dims
+        print('# of dimensions, according to header: ', num_dims)
 
     if from_gzip:
         shape = readNums(file_handle, 
@@ -78,7 +78,7 @@ def readHeader(file_handle, debug=False, from_gzip=None):
                                count=max(num_dims, 3))[:num_dims]
 
     if debug: 
-        print 'Tensor shape, as listed in header:', shape
+        print('Tensor shape, as listed in header:', shape)
 
     return elem_type, elem_size, shape
 

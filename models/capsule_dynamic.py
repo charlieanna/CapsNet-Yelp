@@ -49,7 +49,7 @@ class capsule_dynamic():
 		self.CapsNetwork(self.X, name="capsnet")
 
 		self.trainable_vars = tf.trainable_variables()
-		print "number of parameters: ", count_param(self.trainable_vars)
+		print("number of parameters: ", count_param(self.trainable_vars))
 
 	#implementation of dynamic routing between capsules
 	def CapsNetwork(self, input_image, name):

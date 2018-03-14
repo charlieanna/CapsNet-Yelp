@@ -36,7 +36,7 @@ class baseline_network():
 		self.classifier, self.classifier_logits = self.model(self.X, name="classifier")
 
 		self.trainable_vars = tf.trainable_variables()
-		print "number of parameters: ", count_param(self.trainable_vars)
+		print("number of parameters: ", count_param(self.trainable_vars))
 
 	def build_loss(self):
 		self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.Y, logits=self.classifier_logits))

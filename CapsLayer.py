@@ -190,14 +190,14 @@ class CapsLayer(object):
 			], name='votes'
 			)
 
-			print inputs_poses_patches
-			print hk_offsets
-			print wk_offsets
-			print votes
-			print "pose:", caps_pose
-			print "actv:", caps_actv
+			print(inputs_poses_patches)
+			print(hk_offsets)
+			print(wk_offsets)
+			print(votes)
+			print("pose:", caps_pose)
+			print("actv:", caps_actv)
 			#filter shape = [kernel, kernel, 32, 32, 4, 4]
-			input('Done')
+			eval(input('Done'))
 			#======================================================================
 			return capsules
 

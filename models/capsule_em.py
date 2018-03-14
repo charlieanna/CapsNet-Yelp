@@ -45,7 +45,7 @@ class capsule_em():
 		self.CapsNetwork(self.X, name="capsnet_em")
 
 		self.trainable_vars = tf.trainable_variables()
-		print "number of parameters: ", count_param(self.trainable_vars)
+		print("number of parameters: ", count_param(self.trainable_vars))
 
 
 	def CapsNetwork(self, input, name="capsnet"):
@@ -71,7 +71,7 @@ class capsule_em():
 			# convCaps2 = capsule.em_convCaps(convCaps1, kernel=3, stride=1, num_outputs=32, routing=3, name="convCaps1")
 			
 			
-			input('done')
+			eval(input('done'))
 
 	def build_loss(self):
 		pass

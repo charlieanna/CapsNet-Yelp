@@ -5,9 +5,9 @@ from glob import glob
 import os
 import math
 import cv2
-import cPickle
+import pickle
 
-from norb_reader import *
+from .norb_reader import *
 
 def place_random(trainX):
 	#randomly place 28x28 mnist image on 40x40 background
@@ -101,7 +101,7 @@ def affnist_reader(args, path):
 def cifar_reader(args, path):
 	def unpickle(file):
 		with open(file, 'rb') as fo:
-			dict = cPickle.load(fo)
+			dict = pickle.load(fo)
 		return dict
 
 	train_path = glob(os.path.join(path, "data_batch_*"))	
@@ -226,7 +226,84 @@ def small_norb_reader(args, path):
 
 	return X, Y, data_count
 
+def yelp_reader(args, path):
+	import pandas as pd
+	from scipy import sparse as sp_sparse
+	reviews = pd.read_csv('~/Downloads/yelp/yelp-dataset/yelp_review.csv', nrows=200) 
+	X_train = reviews['text']
+	y_train = reviews['stars']
+	from sklearn.model_selection import train_test_split
+	X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.9, random_state=42)
+	words = []
+	for sentence in X_train:
+	  words.extend(list((sentence.split())))
+	words_unique = list(set(words))
+	from collections import Counter
+	words_counts = Counter(words)
+	most_common_words = sorted(words_counts.items(), key=lambda x: x[1], reverse=True)[:5000]
 
+	DICT_SIZE = 5000
+	WORDS_TO_INDEX = {k:v for k, v in most_common_words}
+	INDEX_TO_WORDS = {v:k for k, v in most_common_words}
+	ALL_WORDS = WORDS_TO_INDEX.keys()
+
+	def my_bag_of_words(text, words_to_index, dict_size):
+	    """
+	        text: a string
+	        dict_size: size of the dictionary
+	        
+	        return a vector which is a bag-of-words representation of 'text'
+	    """
+	    result_vector = np.zeros(dict_size)
+	    for word in text.split():
+	      if word in words_to_index:
+	        result_vector[words_to_index[word]] = result_vector[words_to_index[word]] + 1
+	    return result_vector
+
+	X_train_mybag = [my_bag_of_words(text, WORDS_TO_INDEX, DICT_SIZE) for text in X_train]
+	max_document_length = max([len(x.split(" ")) for x in X_train])
+	import tensorflow as tf
+	from tensorflow.contrib import lookup
+	from tensorflow.python.platform import gfile
+
+	MAX_DOCUMENT_LENGTH = 5  
+	PADWORD = 'ZYXW'
+
+	# create vocabulary
+	vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
+	vocab_processor.fit(X_train)
+	X_train = np.array(list(vocab_processor.fit_transform(X_train)))
+	with gfile.Open('vocab.tsv', 'wb') as f:
+	    f.write("{}\n".format(PADWORD))
+	    for word, index in vocab_processor.vocabulary_._mapping.items():
+	      f.write("{}\n".format(word))
+	N_WORDS = len(vocab_processor.vocabulary_)
+	from sklearn import preprocessing
+	lb = preprocessing.LabelBinarizer()
+	lb.fit([1,2,3,4,5])
+	y_train = lb.transform(y_train)
+	y_test = lb.transform(y_test)
+	trainX, trainY = X_train_mybag, y_train
+	# Parameters
+	if args.is_train:
+		sequence_length=X_train.shape[1]
+		num_classes=y_train.shape[1]
+		vocab_size=len(vocab_processor.vocabulary_)
+		embedding_size=128
+		input_x = tf.placeholder(tf.int32, [None, sequence_length], name="input_x")
+		input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
+		W = tf.Variable(
+		          tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
+		          name="W")
+		embedded_chars = tf.nn.embedding_lookup(W, input_x)
+		embedded_chars_expanded = tf.expand_dims(embedded_chars, -1)
+		X, Y, data_count = embedded_chars_expanded, tf.convert_to_tensor(trainY, dtype=tf.float32), len(X_train)
+	else:
+		X = tf.convert_to_tensor(testX, dtype=tf.float32) / 255.
+		Y = tf.convert_to_tensor(testY, dtype=tf.float32)
+		data_count = len(testX)		
+	return X, Y, data_count
+ 
 def fashion_mnist_reader(args, path):
 	#Training Data
 	f = open(os.path.join(path, 'train-images-idx3-ubyte'))
@@ -341,7 +418,9 @@ def load_data(args):
 		images, labels, data_count = small_norb_reader(args, path)
 	elif args.data == "cifar10":
 		images, labels, data_count = cifar_reader(args, path)		
+	elif args.data == "yelp":
+		images, labels, data_count = yelp_reader(args, path)
 	else:
-		print "Invalid dataset name!!"
+		print("Invalid dataset name!!")
 
 	return images, labels, data_count 

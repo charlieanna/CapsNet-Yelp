@@ -65,8 +65,8 @@ def main(_):
     
     with tf.Session(config=run_config) as sess:
         #print used dataset
-        print "Dataset: %s"%args.data
-        print "Model: %s"%args.model
+        print("Dataset: %s"%args.data)
+        print("Model: %s"%args.model)
 
         if args.model == "baseline_network":
             model = baseline_network(args)
@@ -94,10 +94,10 @@ def main(_):
         manager = Manager(args)
 
         if args.is_train:
-            print 'Start Training...'
+            print('Start Training...')
             manager.train(sess, model)
         else:
-            print 'Start Testing...'
+            print('Start Testing...')
             manager.test(sess, model)
 
 main(args)
